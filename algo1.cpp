@@ -5,38 +5,42 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <algorithm>
 #include "pokemon.h"
 
-// Sample Pokémon data to simulate input from a CSV or database
-std::vector<Pokemon> generateTestData() {
-    return {
-        {"Pikachu", "Electric", "", 55, 90, 0.0, 0.21, 1},
-        {"Charizard", "Fire", "Flying", 84, 100, 0.0, 0.76, 1},
-        {"Blastoise", "Water", "", 83, 78, 0.0, 0.64, 1},
-        {"Garchomp", "Dragon", "Ground", 130, 102, 0.0, 0.89, 4},
-        {"Lucario", "Fighting", "Steel", 110, 90, 0.0, 0.55, 4},
-        {"Greninja", "Water", "Dark", 103, 122, 0.0, 0.83, 6}
-    };
-}
-
-// Filters Pokémon by generation
-std::vector<Pokemon> filterByGeneration(const std::vector<Pokemon>& all, int gen) {
+// Declare the readFiles function from pokeFile.cpp
+std::vector<Pokemon> readFiles();
+// Filter by generation
+std::vector<Pokemon> filterByGen1(const std::vector<Pokemon>& pokemons) {
     std::vector<Pokemon> result;
-    for (const auto& p : all) {
-        if (p.generation == gen)
+    for (const auto& p : pokemons) {
+        if (p.generation == 1) {
             result.push_back(p);
+        }
     }
+
+    std::cout << "Filtered Gen 1 count: " << result.size() << std::endl;  // ✅ Inside function
     return result;
 }
 
-// QuickSort helper for partitioning based on usage rate
+// Display top N Pokémon
+void displayPokemonList(const std::vector<Pokemon>& pokemons, int count) {
+    for (int i = 0; i < std::min(count, (int)pokemons.size()); ++i) {
+        const Pokemon& p = pokemons[i];
+        std::cout << p.name << " | Atk: " << p.atk << " | BST: " << p.total
+                  << " | Type: " << p.type1;
+        if (!p.type2.empty()) std::cout << "/" << p.type2;
+        std::cout << std::endl;
+    }
+}
+
+// Quick Sort
 int partition(std::vector<Pokemon>& arr, int low, int high) {
-    float pivot = arr[high].usageRate;
+    int pivot = arr[high].atk;
     int i = low - 1;
-    for (int j = low; j < high; ++j) {
-        if (arr[j].usageRate > pivot) {
-            ++i;
+
+    for (int j = low; j < high; j++) {
+        if (arr[j].atk > pivot) { // Descending order
+            i++;
             std::swap(arr[i], arr[j]);
         }
     }
@@ -44,31 +48,27 @@ int partition(std::vector<Pokemon>& arr, int low, int high) {
     return i + 1;
 }
 
-// Recursive QuickSort using usage rate in descending order
 void quickSort(std::vector<Pokemon>& arr, int low, int high) {
     if (low < high) {
-        int pivotIndex = partition(arr, low, high);
-        quickSort(arr, low, pivotIndex - 1);
-        quickSort(arr, pivotIndex + 1, high);
+        int pi = partition(arr, low, high);
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
     }
 }
 
-// Merge function for MergeSort
+// Merge Sort
 void merge(std::vector<Pokemon>& arr, int left, int mid, int right) {
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
     std::vector<Pokemon> L(n1), R(n2);
 
-    for (int i = 0; i < n1; ++i)
-        L[i] = arr[left + i];
-    for (int j = 0; j < n2; ++j)
-        R[j] = arr[mid + 1 + j];
+    for (int i = 0; i < n1; i++) L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++) R[j] = arr[mid + 1 + j];
 
     int i = 0, j = 0, k = left;
-
     while (i < n1 && j < n2) {
-        if (L[i].usageRate >= R[j].usageRate) {
+        if (L[i].atk > R[j].atk) {
             arr[k++] = L[i++];
         } else {
             arr[k++] = R[j++];
@@ -79,7 +79,6 @@ void merge(std::vector<Pokemon>& arr, int left, int mid, int right) {
     while (j < n2) arr[k++] = R[j++];
 }
 
-// Recursive MergeSort on usage rate, descending
 void mergeSort(std::vector<Pokemon>& arr, int left, int right) {
     if (left < right) {
         int mid = left + (right - left) / 2;
@@ -89,17 +88,14 @@ void mergeSort(std::vector<Pokemon>& arr, int left, int right) {
     }
 }
 
-// Maintains max-heap property for usage rate
+//Heap Sort
 void heapify(std::vector<Pokemon>& arr, int n, int i) {
     int largest = i;
-    int left = 2 * i + 1;
-    int right = 2 * i + 2;
+    int l = 2 * i + 1;
+    int r = 2 * i + 2;
 
-    if (left < n && arr[left].usageRate > arr[largest].usageRate)
-        largest = left;
-
-    if (right < n && arr[right].usageRate > arr[largest].usageRate)
-        largest = right;
+    if (l < n && arr[l].atk > arr[largest].atk) largest = l;
+    if (r < n && arr[r].atk > arr[largest].atk) largest = r;
 
     if (largest != i) {
         std::swap(arr[i], arr[largest]);
@@ -107,48 +103,46 @@ void heapify(std::vector<Pokemon>& arr, int n, int i) {
     }
 }
 
-// HeapSort to sort Pokémon by usage rate in descending order
 void heapSort(std::vector<Pokemon>& arr) {
     int n = arr.size();
-
-    for (int i = n / 2 - 1; i >= 0; i--)
-        heapify(arr, n, i);
-
-    for (int i = n - 1; i > 0; i--) {
+    for (int i = n / 2 - 1; i >= 0; i--) heapify(arr, n, i);
+    for (int i = n - 1; i >= 0; i--) {
         std::swap(arr[0], arr[i]);
         heapify(arr, i, 0);
     }
 
+    // Reverse for descending order
     std::reverse(arr.begin(), arr.end());
 }
 
 int main() {
-    std::vector<Pokemon> allPokemons = generateTestData();
+    std::vector<Pokemon> allPokemon = readFiles();
 
-    // QuickSort test
-    std::vector<Pokemon> gen1_quick = filterByGeneration(allPokemons, 1);
-    std::cout << "Gen 1 Pokémon BEFORE QuickSort:\n";
-    for (const auto& p : gen1_quick)
-        std::cout << "- " << p.name << " (Usage Rate: " << p.usageRate << ")\n";
+    std::cout << "Immediately after readFiles(), count = " << allPokemon.size() << std::endl;
+    if (!allPokemon.empty()) {
+        std::cout << "First entry: " << allPokemon[0].name << ", Gen: " << allPokemon[0].generation << std::endl;
+    }
+    // Filter Gen 1
+    std::vector<Pokemon> gen1Pokemon = filterByGen1(allPokemon);
+    std::cout << "Gen 1 count: " << gen1Pokemon.size() << std::endl;
+    // Make 3 copies for each sort
+    std::vector<Pokemon> quickList = gen1Pokemon;
+    std::vector<Pokemon> mergeList = gen1Pokemon;
+    std::vector<Pokemon> heapList = gen1Pokemon;
 
-    quickSort(gen1_quick, 0, gen1_quick.size() - 1);
-    std::cout << "\nGen 1 Pokémon AFTER QuickSort:\n";
-    for (const auto& p : gen1_quick)
-        std::cout << "- " << p.name << " (Usage Rate: " << p.usageRate << ")\n";
+    quickSort(quickList, 0, quickList.size() - 1);
+    mergeSort(mergeList, 0, mergeList.size() - 1);
+    heapSort(heapList);
 
-    // MergeSort test
-    std::vector<Pokemon> gen1_merge = filterByGeneration(allPokemons, 1);
-    mergeSort(gen1_merge, 0, gen1_merge.size() - 1);
-    std::cout << "\nGen 1 Pokémon AFTER MergeSort:\n";
-    for (const auto& p : gen1_merge)
-        std::cout << "- " << p.name << " (Usage Rate: " << p.usageRate << ")\n";
+    std::cout << "Quick Sort by Attack:\n";
+    displayPokemonList(quickList, 10);
 
-    // HeapSort test
-    std::vector<Pokemon> gen1_heap = filterByGeneration(allPokemons, 1);
-    heapSort(gen1_heap);
-    std::cout << "\nGen 1 Pokémon AFTER HeapSort:\n";
-    for (const auto& p : gen1_heap)
-        std::cout << "- " << p.name << " (Usage Rate: " << p.usageRate << ")\n";
+    std::cout << "\nMerge Sort by Attack:\n";
+    displayPokemonList(mergeList, 10);
+
+    std::cout << "\nHeap Sort by Attack:\n";
+    displayPokemonList(heapList, 10);
 
     return 0;
 }
+
