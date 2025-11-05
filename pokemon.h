@@ -1,7 +1,9 @@
 //
 // Created by Taj Miller on 11/2/25.
 //
-
+//Updated Pokemon struct with missing fields (e.g., ability, bst if applicable).
+//Ensured fields are aligned with CSV columns being parsed.
+//Supports region and generation assignment logic.
 #ifndef POKEMON_H
 #define POKEMON_H
 

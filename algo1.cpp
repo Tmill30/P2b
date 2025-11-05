@@ -1,7 +1,9 @@
 
 // FIRST comparable algorithm
 // heapsort, quicksort, mergesort descending order usage rates and best counters in said generation (like no comparing gen 1 to gen 7)
-
+//Implemented filtering of Pokémon by Generation 1.
+//Added debug output to verify Gen 1 filtering and count.
+//Displayed sorted Gen 1 Pokémon using Quick Sort, Merge Sort, and Heap Sort by Attack.
 #include <iostream>
 #include <vector>
 #include <string>

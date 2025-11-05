@@ -9,7 +9,10 @@ using namespace std;
 // Nat,Pokemon,HP,Atk,Def,SpA,SpD,Spe,Total,Type I,Type II,Ability I,Ability II,Hidden Ability,
 // EV Worth,Gender,Egg Group I,Egg Group II,Catch,Evolve
 // 20 columns
-
+//Fixed CSV parsing logic to handle all 1010 Pokémon entries.
+//Added validation to skip malformed or incomplete data.
+//Assigned generation and region based on national dex number.
+//Debug output added to track invalid entries and parsing progress
 
 vector<Pokemon> readFiles() {
     ifstream pokemonFile("../pokemon.csv");
